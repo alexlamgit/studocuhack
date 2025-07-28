@@ -23,14 +23,25 @@ function generatePDF() {
 
     const pdfContent = pageNodes[0].parentNode.parentNode.parentNode.innerHTML;
 
-    let pdfWindow = window.open("", "Document", "height=865,width=625,status=yes,toolbar=no,menubar=no");  
-    pdfWindow.document.querySelector("head").innerHTML = `${docHead} <style>.nofilter{filter: none !important;}</style><style>@media print ${printSettings}</style>`;
-    pdfWindow.document.title = docTitle;
-    pdfWindow.document.querySelector("body").innerHTML = pdfContent;
-    const PdfNodes = parseNodes(pdfWindow.document.body.firstChild.firstChild.childNodes)
-    pdfWindow.document.querySelector("body").firstChild.firstChild.innerHTML = ''
-    PdfNodes.forEach(child => pdfWindow.document.querySelector("body").firstChild.firstChild.appendChild(child))
-    pdfWindow.document.querySelector("body").childNodes[0].style = "";
+    let pdfWindow = window.open("", "Document", "height=865,width=625,status=yes,toolbar=no,menubar=no");
+    if (!pdfWindow) {
+        alert("Popup blocked! Please allow popups for this site.");
+        return;
+    }
+
+    // Wait for the new window's DOM to be ready
+    pdfWindow.document.write('<!DOCTYPE html><html><head></head><body></body></html>');
+    pdfWindow.document.close();
+    pdfWindow.addEventListener('DOMContentLoaded', function onReady() {
+        pdfWindow.removeEventListener('DOMContentLoaded', onReady);
+        pdfWindow.document.querySelector("head").innerHTML = `${docHead} <style>.nofilter{filter: none !important;}</style><style>@media print ${printSettings}</style>`;
+        pdfWindow.document.title = docTitle;
+        pdfWindow.document.querySelector("body").innerHTML = pdfContent;
+        const PdfNodes = parseNodes(pdfWindow.document.body.firstChild.firstChild.childNodes);
+        pdfWindow.document.querySelector("body").firstChild.firstChild.innerHTML = '';
+        PdfNodes.forEach(child => pdfWindow.document.querySelector("body").firstChild.firstChild.appendChild(child));
+        pdfWindow.document.querySelector("body").childNodes[0].style = "";
+    });
 }
 
 function createDownloadButton() {
